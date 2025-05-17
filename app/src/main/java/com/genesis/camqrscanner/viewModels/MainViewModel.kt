@@ -1,7 +1,7 @@
 package com.genesis.camqrscanner.viewModels
 
 import android.content.Context
-import androidx.camera.core.CameraSelector.DEFAULT_FRONT_CAMERA
+import androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -25,7 +25,7 @@ class MainViewModel : ViewModel() {
     suspend fun bindToCamera(appContext: Context, lifecycleOwner: LifecycleOwner) {
         val processCamProvider = ProcessCameraProvider.awaitInstance(appContext)
         processCamProvider.bindToLifecycle(
-            lifecycleOwner, DEFAULT_FRONT_CAMERA, camPreviewUseCase
+            lifecycleOwner, DEFAULT_BACK_CAMERA, camPreviewUseCase
         )
 
         // Cancellation signals we're done with the camera
