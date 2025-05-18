@@ -2,6 +2,7 @@ package com.genesis.camqrscanner
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.camera.compose.CameraXViewfinder
@@ -38,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,7 +108,9 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 
 
     if (showBottomSheet) {
-
+        BackHandler(enabled = true) {
+            // Do nothing to prevent dismissal
+        }
         if (camPermission.status.isGranted) {
 
             ModalBottomSheet(
@@ -250,6 +254,9 @@ fun AlertDialog(
     dialogText: String,
     icon: ImageVector,
 ) {
+    BackHandler(enabled = true) {
+        // Do nothing to prevent dismissal
+    }
     AlertDialog(
         icon = {
             Icon(icon, contentDescription = "Example Icon")
@@ -280,7 +287,8 @@ fun AlertDialog(
             ) {
                 Text("Dismiss")
             }
-        }
+        },
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
     )
 }
 
