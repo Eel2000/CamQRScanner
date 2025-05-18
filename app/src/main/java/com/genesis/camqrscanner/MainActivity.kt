@@ -119,6 +119,9 @@ fun BottomSheet(
     lifeCycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     onDismiss: () -> Unit
 ) {
+    val qrContentValue by viewModel.contentValue.collectAsStateWithLifecycle()
+    val hasCompleted by viewModel.hasCompleted.collectAsStateWithLifecycle()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -126,6 +129,27 @@ fun BottomSheet(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("QR Code Result")
+
+        if (hasCompleted && !qrContentValue.isNullOrEmpty()) {
+            Text(
+                text = qrContentValue ?: "No QR code found!",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(16.dp)
+            )
+        } else if (hasCompleted && qrContentValue.isNullOrEmpty()) {
+            Text(
+                text = "No QR code detected",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(16.dp)
+            )
+        } else {
+            Text(
+                text = "Scanning...",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+
         Button(onClick = onDismiss) {
             Text("Close")
         }
@@ -135,7 +159,11 @@ fun BottomSheet(
             viewModel.bindToCamera(context.applicationContext, lifeCycleOwner)
         }
         surfaceRequest?.let { request ->
-            CameraXViewfinder(surfaceRequest = request, modifier.height(200.dp).width(200.dp))
+            CameraXViewfinder(
+                surfaceRequest = request, modifier
+                    .height(200.dp)
+                    .width(200.dp)
+            )
         }
     }
 }
