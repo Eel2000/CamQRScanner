@@ -12,12 +12,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -71,6 +77,19 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     var canShowPermissionSheet by remember { mutableStateOf(false) }
     val camPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
 
+    var qrContentValue by remember { mutableStateOf("") }
+    var canShowDialog by remember { mutableStateOf(false) }
+
+    if (canShowDialog) {
+        AlertDialog(
+            onDismissRequest = { canShowDialog = false },
+            onConfirmation = { canShowDialog = false },
+            dialogTitle = "QR Code Scanned",
+            dialogText = qrContentValue ?: "No QR code found!",
+            icon = Icons.Default.MailOutline
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -79,7 +98,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center
     ) {
         Button(onClick = {
-            showBottomSheet = !showBottomSheet
+            showBottomSheet = true
         }, colors = ButtonDefaults.buttonColors()) {
             Text("Scan QR Code")
         }
@@ -92,10 +111,13 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 
             ModalBottomSheet(
                 onDismissRequest = { showBottomSheet = false },
-                sheetState = bottomSheetState
+                sheetState = bottomSheetState,
             ) {
                 BottomSheet(viewmodel, modifier = modifier, onDismiss = {
                     showBottomSheet = false
+                }, onComplete = { dialog,qrValue ->
+                    canShowDialog = dialog
+                    qrContentValue = qrValue
                 })
             }
         } else {
@@ -117,10 +139,24 @@ fun BottomSheet(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier,
     lifeCycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onComplete: (canShowDialog: Boolean,qr: String) -> Unit = { _ , _ -> }
 ) {
     val qrContentValue by viewModel.contentValue.collectAsStateWithLifecycle()
     val hasCompleted by viewModel.hasCompleted.collectAsStateWithLifecycle()
+    var canShowDialog by remember { mutableStateOf(false) }
+
+
+
+    if (canShowDialog) {
+        AlertDialog(
+            onDismissRequest = { canShowDialog = false },
+            onConfirmation = { canShowDialog = false },
+            dialogTitle = "QR Code Scanned",
+            dialogText = qrContentValue ?: "No QR code found!",
+            icon = Icons.Default.MailOutline
+        )
+    }
 
     Column(
         modifier = modifier
@@ -128,14 +164,15 @@ fun BottomSheet(
             .padding(horizontal = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("QR Code Result")
-
         if (hasCompleted && !qrContentValue.isNullOrEmpty()) {
-            Text(
-                text = qrContentValue ?: "No QR code found!",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(16.dp)
-            )
+//            Text(
+//                text = qrContentValue ?: "No QR code found!",
+//                textAlign = TextAlign.Center,
+//                modifier = Modifier.padding(16.dp)
+//            )
+            onComplete(true,qrContentValue.toString())
+//            canShowDialog = true
+            onDismiss()
         } else if (hasCompleted && qrContentValue.isNullOrEmpty()) {
             Text(
                 text = "No QR code detected",
@@ -161,10 +198,11 @@ fun BottomSheet(
         surfaceRequest?.let { request ->
             CameraXViewfinder(
                 surfaceRequest = request, modifier
-                    .height(200.dp)
+                    .height(180.dp)
                     .width(200.dp)
             )
         }
+
     }
 }
 
@@ -202,6 +240,48 @@ fun PermissionDialog(
             Text("Unleash the Camera!")
         }
     }
+}
+
+@Composable
+fun AlertDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmation: () -> Unit,
+    dialogTitle: String,
+    dialogText: String,
+    icon: ImageVector,
+) {
+    AlertDialog(
+        icon = {
+            Icon(icon, contentDescription = "Example Icon")
+        },
+        title = {
+            Text(text = dialogTitle)
+        },
+        text = {
+            Text(text = dialogText)
+        },
+        onDismissRequest = {
+            onDismissRequest()
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirmation()
+                }
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text("Dismiss")
+            }
+        }
+    )
 }
 
 
